@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVUP STORE - Power Level Up!</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #0f0f1a;
+    --bg3: #13131f;
+    --purple: #8b5cf6;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --green: #10b981;
+    --card: rgba(20,20,35,0.85);
+    --border: rgba(139,92,246,0.3);
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --glow-p: 0 0 20px rgba(139,92,246,0.5);
+    --glow-c: 0 0 20px rgba(6,182,212,0.5);
+    --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .light-mode {
+    --bg: #f0f4ff;
+    --bg2: #e8eeff;
+    --bg3: #dde4ff;
+    --card: rgba(255,255,255,0.9);
+    --border: rgba(139,92,246,0.4);
+    --text: #1e1b4b;
+    --text2: #4c1d95;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Vazirmatn', 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: var(--transition);
+  }
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .light-mode .navbar { background: rgba(240,244,255,0.9); }
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    letter-spacing: 3px;
+    animation: neonPulse 2s ease-in-out infinite alternate;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  @keyframes neonPulse {
+    from { filter: drop-shadow(0 0 5px rgba(139,92,246,0.8)); }
+    to { filter: drop-shadow(0 0 15px rgba(6,182,212,0.9)) drop-shadow(0 0 30px rgba(139,92,246,0.5)); }
+  }
+  .nav-links {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+  }
+  .nav-link {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    color: var(--text2);
+    border: 1px solid transparent;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .nav-link:hover, .nav-link.active {
+    color: var(--purple);
+    border-color: var(--border);
+    background: rgba(139,92,246,0.1);
+    box-shadow: var(--glow-p);
+  }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--purple);
+    font-size: 1.1rem;
+    transition: var(--transition);
+    position: relative;
+  }
+  .icon-btn:hover { background: rgba(139,92,246,0.25); box-shadow: var(--glow-p); }
+  .badge {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--pink);
+    color: white;
+    font-size: 0.65rem;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+  .hamburger span { width: 24px; height: 2px; background: var(--purple); border-radius: 2px; transition: var(--transition); }
+
+  /* ===== PAGES ===== */
+  .page { display: none; min-height: 100vh; padding-top: 70px; }
+  .page.active { display: block; animation: fadeInUp 0.5s ease; }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== HOME PAGE ===== */
+  .hero {
+    position: relative;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 2rem;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(6,182,212,0.1) 50%, rgba(236,72,153,0.1) 100%);
+  }
+  .hero-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(6,182,212,0.15) 0%, transparent 60%);
+  }
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 800px;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 0.4rem 1.2rem;
+    font-size: 0.85rem;
+    color: var(--purple);
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.5s ease 0.1s both;
+  }
+  .hero-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fff 30%, var(--purple) 60%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeInUp 0.5s ease 0.2s both;
+  }
+  .light-mode .hero-title { background: linear-gradient(135deg, #1e1b4b 30%, var(--purple) 60%, var(--cyan) 100%); -webkit-background-clip: text; }
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--text2);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+    animation: fadeInUp 0.5s ease 0.3s both;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.5s ease 0.4s both;
+  }
+  .btn-primary {
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Vazirmatn', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    opacity: 0;
+    transition: var(--transition);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(139,92,246,0.4); }
+  .btn-primary:hover::before { opacity: 1; }
+  .btn-outline {
+    padding: 0.8rem 2rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Vazirmatn', sans-serif;
+  }
+  .btn-outline:hover { border-color: var(--purple); color: var(--purple); background: rgba(139,92,246,0.1); }
+
+  /* SECTION TITLES */
+  .section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; }
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .section-divider {
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    border-radius: 2px;
+    margin-bottom: 2rem;
+  }
+
+  /* NEWS CARDS */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .news-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+  }
+  .news-card:hover { transform: translateY(-5px); box-shadow: var(--glow-p); border-color: var(--purple); }
+  .news-card-img {
+    width: 100%; height: 180px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--bg2), var(--bg3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+  }
+  .news-card-body { padding: 1.2rem; }
+  .news-tag {
+    display: inline-block;
+    padding: 0.2rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.7rem;
+  }
+  .tag-news { background: rgba(139,92,246,0.2); color: var(--purple); border: 1px solid rgba(139,92,246,0.3); }
+  .tag-discount { background: rgba(16,185,129,0.2); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .tag-event { background: rgba(6,182,212,0.2); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); }
+  .tag-contact { background: rgba(236,72,153,0.2); color: var(--pink); border: 1px solid rgba(236,72,153,0.3); }
+  .news-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .news-card p { font-size: 0.85rem; color: var(--text2); line-height: 1.6; }
+  .news-date { font-size: 0.75rem; color: var(--text2); margin-top: 0.8rem; }
+
+  /* CONTACT SECTION */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .contact-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+  }
+  .contact-card:hover { border-color: var(--cyan); box-shadow: var(--glow-c); transform: translateY(-3px); }
+  .contact-icon { font-size: 2.5rem; margin-bottom: 0.7rem; }
+  .contact-card h4 { font-weight: 700; margin-bottom: 0.3rem; }
+  .contact-card p { font-size: 0.85rem; color: var(--text2); }
+
+  /* DISCOUNT BANNER */
+  .discount-banner {
+    background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .discount-banner::before {
+    content: '🔥';
+    position: absolute;
+    font-size: 8rem;
+    opacity: 0.05;
+    right: -1rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .discount-text h2 { font-family: 'Orbitron', monospace; font-size: 1.5rem; color: var(--purple); }
+  .discount-text p { color: var(--text2); margin-top: 0.3rem; }
+  .discount-code {
+    background: rgba(16,185,129,0.1);
+    border: 2px dashed var(--green);
+    border-radius: 12px;
+    padding: 0.8rem 1.5rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    color: var(--green);
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .discount-code:hover { background: rgba(16,185,129,0.2); }
+
+  /* ===== SHOP PAGE ===== */
+  .filter-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Vazirmatn', sans-serif;
+    font-weight: 600;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: white;
+    box-shadow: var(--glow-p);
+  }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .product-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+  .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(139,92,246,0.3); border-color: var(--purple); }
+  .product-card-img {
+    width: 100%; height: 200px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--bg2), var(--bg3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+    position: relative;
+  }
+  .product-category-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge-game { background: rgba(139,92,246,0.8); color: white; }
+  .badge-telegram { background: rgba(6,182,212,0.8); color: white; }
+  .product-card-body { padding: 1.3rem; }
+  .product-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .product-card p { font-size: 0.85rem; color: var(--text2); line-height: 1.6; margin-bottom: 1rem; }
+  .product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .product-price {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .product-price span { font-size: 0.75rem; color: var(--text2); font-family: 'Vazirmatn', sans-serif; }
+  .buy-btn {
+    padding: 0.5rem 1.2rem;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Vazirmatn', sans-serif;
+  }
+  .buy-btn:hover { transform: scale(1.05); box-shadow: var(--glow-p); }
+  .admin-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+  .edit-btn, .delete-btn {
+    flex: 1;
+    padding: 0.4rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'Vazirmatn', sans-serif;
+    font-weight: 600;
+    transition: var(--transition);
+  }
+  .edit-btn { background: rgba(6,182,212,0.2); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); }
+  .delete-btn { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+  .edit-btn:hover { background: rgba(6,182,212,0.4); }
+  .delete-btn:hover { background: rgba(239,68,68,0.4); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text2);
+  }
+  .empty-state .emoji { font-size: 4rem; margin-bottom: 1rem; }
+  .empty-state h3 { font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text); }
+
+  /* ===== SEARCH PAGE ===== */
+  .search-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+  .search-box {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  .search-input {
+    width: 100%;
+    padding: 1rem 1.5rem 1rem 3.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text);
+    font-size: 1rem;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: var(--transition);
+    outline: none;
+    backdrop-filter: blur(10px);
+  }
+  .search-input:focus { border-color: var(--purple); box-shadow: var(--glow-p); }
+  .search-icon {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text2);
+    font-size: 1.1rem;
+  }
+  .sort-bar {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    align-items: center;
+  }
+  .sort-label { color: var(--text2); font-size: 0.9rem; font-weight: 600; }
+  .sort-select {
+    padding: 0.5rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    transition: var(--transition);
+  }
+  .sort-select:focus { border-color: var(--purple); }
+  .search-results-info {
+    color: var(--text2);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .search-results-info span { color: var(--purple); font-weight: 700; }
+
+  /* ===== CATEGORIES PAGE ===== */
+  .categories-hero {
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+  }
+  .category-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .category-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(139,92,246,0.1), transparent);
+    opacity: 0;
+    transition: var(--transition);
+  }
+  .category-card:hover { transform: translateY(-8px); border-color: var(--purple); box-shadow: var(--glow-p); }
+  .category-card:hover::before { opacity: 1; }
+  .category-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .category-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .category-card p { font-size: 0.85rem; color: var(--text2); }
+  .category-count {
+    display: inline-block;
+    margin-top: 0.7rem;
+    padding: 0.2rem 0.8rem;
+    background: rgba(139,92,246,0.2);
+    border-radius: 50px;
+    font-size: 0.8rem;
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  /* ===== CART PAGE ===== */
+  .cart-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+  .cart-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+  }
+  .cart-item:hover { border-color: var(--purple); }
+  .cart-item-img {
+    width: 70px; height: 70px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--bg2), var(--bg3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-item-info { flex: 1; }
+  .cart-item-info h4 { font-weight: 700; margin-bottom: 0.3rem; }
+  .cart-item-info p { font-size: 0.85rem; color: var(--text2); }
+  .cart-item-price {
+    font-family: 'Orbitron', monospace;
+    color: var(--green);
+    font-weight: 700;
+  }
+  .cart-remove {
+    width: 35px; height: 35px;
+    border-radius: 8px;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #ef4444;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    transition: var(--transition);
+  }
+  .cart-remove:hover { background: rgba(239,68,68,0.3); }
+  .cart-summary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+  }
+  .cart-summary h3 { font-family: 'Orbitron', monospace; font-size: 1.2rem; margin-bottom: 1.5rem; }
+  .cart-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .cart-row:last-of-type { border: none; font-weight: 700; font-size: 1.1rem; }
+  .cart-row span:last-child { color: var(--green); font-family: 'Orbitron', monospace; }
+
+  /* ===== ACCOUNT PAGE ===== */
+  .account-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+  .auth-tabs {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.4rem;
+    margin-bottom: 2rem;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 0.7rem;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: var(--transition);
+    color: var(--text2);
+  }
+  .auth-tab.active { background: linear-gradient(135deg, var(--purple), var(--cyan)); color: white; }
+  .auth-form {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+  }
+  .form-group { margin-bottom: 1.3rem; }
+  .form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text2);
+  }
+  .form-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: var(--transition);
+  }
+  .form-input:focus { border-color: var(--purple); box-shadow: var(--glow-p); }
+  .user-profile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+  }
+  .user-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    margin: 0 auto 1rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    font-family: 'Orbitron', monospace;
+  }
+  .user-level {
+    display: inline-block;
+    padding: 0.3rem 1rem;
+    background: rgba(139,92,246,0.2);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    font-size: 0.85rem;
+    color: var(--purple);
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  .user-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .stat-box {
+    background: var(--bg2);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+  }
+  .stat-box .num {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    color: var(--purple);
+    font-weight: 700;
+  }
+  .stat-box .label { font-size: 0.8rem; color: var(--text2); margin-top: 0.3rem; }
+
+  /* ===== ADMIN PANEL ===== */
+  .admin-banner {
+    background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.1));
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--purple);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .admin-banner h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    color: var(--purple);
+  }
+  .admin-banner-actions { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+  .admin-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  .admin-form {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+  }
+  .admin-form h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  .form-select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .form-select:focus { border-color: var(--purple); }
+  .form-textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: var(--transition);
+  }
+  .form-textarea:focus { border-color: var(--purple); }
+
+  /* ADMIN STATS */
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .admin-stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .admin-stat-card .num {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+  .admin-stat-card .label { color: var(--text2); font-size: 0.9rem; margin-top: 0.3rem; }
+
+  /* ORDERS TABLE */
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  .orders-table th {
+    background: rgba(139,92,246,0.15);
+    padding: 0.8rem 1rem;
+    text-align: right;
+    font-weight: 700;
+    color: var(--purple);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .orders-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(139,92,246,0.1);
+    color: var(--text2);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .orders-table tr:hover td { background: rgba(139,92,246,0.05); }
+  .table-wrapper {
+    overflow-x: auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+  }
+
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+    position: relative;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    color: var(--purple);
+  }
+  .modal-close {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #ef4444;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    transition: var(--transition);
+  }
+  .modal-close:hover { background: rgba(239,68,68,0.35); }
+  .password-input-wrapper { position: relative; }
+  .toggle-pass {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 1rem;
+  }
+
+  /* SUCCESS MODAL */
+  .success-content {
+    text-align: center;
+    padding: 1rem;
+  }
+  .success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounceIn 0.5s ease;
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  .success-content h2 { font-family: 'Orbitron', monospace; color: var(--green); margin-bottom: 0.5rem; }
+  .success-content p { color: var(--text2); }
+
+  /* ===== CHATBOT ===== */
+  .chat-widget {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 1500;
+  }
+  .chat-toggle {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    box-shadow: 0 5px 25px rgba(139,92,246,0.5);
+    transition: var(--transition);
+    position: relative;
+    animation: chatPulse 3s ease-in-out infinite;
+  }
+  @keyframes chatPulse {
+    0%, 100% { box-shadow: 0 5px 25px rgba(139,92,246,0.5); }
+    50% { box-shadow: 0 5px 35px rgba(139,92,246,0.8), 0 0 0 10px rgba(139,92,246,0.1); }
+  }
+  .chat-toggle:hover { transform: scale(1.1); }
+  .chat-box {
+    display: none;
+    position: absolute;
+    bottom: 75px;
+    left: 0;
+    width: 340px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: slideUp 0.3s ease;
+  }
+  .chat-box.open { display: flex; flex-direction: column; }
+  .chat-header {
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .chat-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+  }
+  .chat-header-info h4 { font-weight: 700; font-size: 0.95rem; color: white; }
+  .chat-status { font-size: 0.75rem; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 0.3rem; }
+  .online-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: blink 1.5s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .chat-messages {
+    height: 280px;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 0.7rem 1rem;
+    border-radius: 16px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    animation: fadeInUp 0.3s ease;
+  }
+  .msg.bot {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.user {
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    color: white;
+    align-self: flex-end;
+    border-bottom-left-radius: 4px;
+  }
+  .msg-time { font-size: 0.7rem; color: var(--text2); margin-top: 0.3rem; }
+  .typing-indicator {
+    display: none;
+    align-self: flex-start;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.7rem 1rem;
+  }
+  .typing-indicator.show { display: flex; gap: 4px; align-items: center; }
+  .dot { width: 6px; height: 6px; background: var(--text2); border-radius: 50%; animation: typingDot 1.4s ease infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingDot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chat-input-area {
+    padding: 0.8rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 0.5rem;
+  }
+  .chat-input {
+    flex: 1;
+    padding: 0.6rem 0.9rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+  }
+  .chat-input:focus { border-color: var(--purple); }
+  .chat-send {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-send:hover { transform: scale(1.1); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .footer-marquee {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, var(--purple), var(--cyan), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+    animation: marqueeScroll 15s linear infinite;
+    display: inline-block;
+  }
+  @keyframes marqueeScroll {
+    0% { transform: translateX(50vw); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ===== UTILITIES ===== */
+  .toast {
+    position: fixed;
+    top: 90px; right: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    gap: 0.7rem;
+    box-shadow: var(--glow-p);
+    animation: slideInRight 0.3s ease;
+    max-width: 320px;
+  }
+  .toast.show { display: flex; }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 70px; left: 0; right: 0;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+    z-index: 999;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .mobile-menu.open { display: flex; }
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid var(--border);
+    color: var(--purple);
+  }
+
+  /* CART QUANTITY */
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .qty-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: rgba(139,92,246,0.2);
+    border: 1px solid var(--border);
+    color: var(--purple);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+  }
+  .qty-btn:hover { background: rgba(139,92,246,0.4); }
+  .qty-num {
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .products-grid { grid-template-columns: 1fr; }
+    .news-grid { grid-template-columns: 1fr; }
+    .chat-box { width: 280px; left: 0; }
+    .admin-form .form-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 2.2rem; }
+    .discount-banner { flex-direction: column; text-align: center; }
+    .user-stats { grid-template-columns: repeat(3, 1fr); }
+    .cart-item { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <div class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </div>
+    <a class="logo" onclick="showPage('home')">⚡ LVUP</a>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link active" onclick="showPage('home')" id="nav-home">🏠 خانه</a>
+    <a class="nav-link" onclick="showPage('shop')" id="nav-shop">🛒 فروشگاه</a>
+    <a class="nav-link" onclick="showPage('search')" id="nav-search">🔍 جستجو</a>
+    <a class="nav-link" onclick="showPage('categories')" id="nav-categories">📂 دسته‌بندی</a>
+  </div>
+  <div class="nav-right">
+    <button class="icon-btn" onclick="showPage('cart')" title="سبد خرید">
+      🛒
+      <span class="badge" id="cartBadge" style="display:none">0</span>
+    </button>
+    <button class="icon-btn" onclick="showPage('account')" title="حساب کاربری">👤</button>
+    <button class="icon-btn" onclick="toggleTheme()" title="تغییر تم" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="openAdminModal()" title="پنل ادمین" id="adminBtn">
+      ⚙️
+      <span class="badge" id="adminNotif" style="display:none">!</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a class="nav-link" onclick="showPage('home');toggleMobileMenu()">🏠 خانه</a>
+  <a class="nav-link" onclick="showPage('shop');toggleMobileMenu()">🛒 فروشگاه</a>
+  <a class="nav-link" onclick="showPage('search');toggleMobileMenu()">🔍 جستجو</a>
+  <a class="nav-link" onclick="showPage('categories');toggleMobileMenu()">📂 دسته‌بندی</a>
+</div>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="page-home">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="grid-bg"></div>
+    <div class="hero-content">
+      <div class="hero-badge">⚡ بهترین فروشگاه خدمات گیمینگ ایران</div>
+      <h1 class="hero-title">LVUP STORE</h1>
+      <p class="hero-sub">خدمات گیم‌های آنلاین، افزایش ممبر تلگرام و تمام نیازهای دیجیتالت اینجاست 🔥<br>سریع، مطمئن، ۲۴ ساعته</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="showPage('shop')">🛒 خرید کن</button>
+        <button class="btn-outline" onclick="showPage('search')">🔍 جستجوی خدمات</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISCOUNT BANNER -->
+  <div class="section">
+    <div class="discount-banner" id="discountBanner">
+      <div class="discount-text">
+        <h2>🎉 تخفیف ویژه هفته!</h2>
+        <p>با کد تخفیف زیر ۱۵٪ روی همه خدمات گیمینگ تخفیف بگیر</p>
+      </div>
+      <div>
+        <div class="discount-code" onclick="copyCode(this)" id="discountCodeEl">LVUP15</div>
+        <p style="font-size:0.75rem;color:var(--text2);margin-top:0.4rem;text-align:center;">کلیک کن کپی بشه 👆</p>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div class="section-title">📰 اخبار و رویدادها</div>
+    <div class="section-divider"></div>
+    <div class="news-grid" id="newsGrid">
+      <!-- News loaded by JS -->
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="section" style="padding-top:0">
+    <div class="section-title">📞 راه‌های ارتباطی</div>
+    <div class="section-divider"></div>
+    <div class="contact-grid">
+      <a class="contact-card" href="https://t.me/lvupstore" target="_blank">
+        <div class="contact-icon">✈️</div>
+        <h4>کانال تلگرام</h4>
+        <p>@lvupstore</p>
+      </a>
+      <a class="contact-card" href="https://t.me/lvupsupport" target="_blank">
+        <div class="contact-icon">💬</div>
+        <h4>پشتیبانی تلگرام</h4>
+        <p>@lvupsupport</p>
+      </a>
+      <a class="contact-card" href="https://instagram.com/lvupstore" target="_blank">
+        <div class="contact-icon">📸</div>
+        <h4>اینستاگرام</h4>
+        <p>@lvupstore</p>
+      </a>
+      <a class="contact-card" href="mailto:support@lvupstore.ir">
+        <div class="contact-icon">📧</div>
+        <h4>ایمیل پشتیبانی</h4>
+        <p>support@lvupstore.ir</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SHOP PAGE ===== -->
+<div class="page" id="page-shop">
+  <div id="adminBanner" style="display:none">
+    <!-- Admin banner injected here -->
+  </div>
+  <div style="max-width:1200px;margin:0 auto;padding:2rem;">
+    <div class="section-title" style="margin-bottom:0.3rem">🛒 فروشگاه</div>
+    <p style="color:var(--text2);margin-bottom:1.5rem">تمام خدمات ما برای شما</p>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterProducts('all',this)">⚡ همه خدمات</button>
+      <button class="filter-btn" onclick="filterProducts('game',this)">🎮 خدمات گیم‌ها</button>
+      <button class="filter-btn" onclick="filterProducts('telegram',this)">✈️ خدمات تلگرام</button>
+      <div id="categoryFilters" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-right:auto;"></div>
+    </div>
+    <div class="products-grid" id="productsGrid">
+      <!-- Products rendered here -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEARCH PAGE ===== -->
+<div class="page" id="page-search">
+  <div class="search-container" style="max-width:1100px;margin:0 auto;padding:2rem;">
+    <div class="section-title" style="margin-bottom:0.5rem">🔍 جستجوی خدمات</div>
+    <p style="color:var(--text2);margin-bottom:1.5rem">دنبال چی می‌گردی؟</p>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="نام خدمت، بازی یا کلمه‌کلیدی..." oninput="doSearch()">
+    </div>
+    <div class="sort-bar">
+      <span class="sort-label">مرتب‌سازی:</span>
+      <select class="sort-select" id="sortSelect" onchange="doSearch()">
+        <option value="newest">جدیدترین</option>
+        <option value="oldest">قدیمی‌ترین</option>
+        <option value="price-asc">ارزان‌ترین</option>
+        <option value="price-desc">گران‌ترین</option>
+      </select>
+      <select class="sort-select" id="filterCatSelect" onchange="doSearch()">
+        <option value="all">همه دسته‌ها</option>
+        <option value="game">گیم</option>
+        <option value="telegram">تلگرام</option>
+      </select>
+    </div>
+    <div class="search-results-info" id="searchInfo"></div>
+    <div class="products-grid" id="searchResults"></div>
+  </div>
+</div>
+
+<!-- ===== CATEGORIES PAGE ===== -->
+<div class="page" id="page-categories">
+  <div class="categories-hero">
+    <div class="section-title" style="margin-bottom:0.5rem">📂 دسته‌بندی خدمات</div>
+    <p style="color:var(--text2)">دسته‌بندی‌ها توسط ادمین‌ها مدیریت می‌شوند</p>
+  </div>
+  <div class="categories-grid" id="categoriesGrid">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- ===== CART PAGE ===== -->
+<div class="page" id="page-cart">
+  <div class="cart-container">
+    <div class="section-title" style="margin-bottom:0.5rem">🛒 سبد خرید</div>
+    <p style="color:var(--text2);margin-bottom:2rem">محصولات انتخاب‌شده شما</p>
+    <div id="cartItems"></div>
+    <div id="cartSummarySection" style="display:none">
+      <div class="cart-summary">
+        <h3>📊 خلاصه سفارش</h3>
+        <div class="cart-row"><span>تعداد آیتم‌ها:</span><span id="cartCount">0</span></div>
+        <div class="cart-row"><span>جمع کل:</span><span id="cartTotal">0 تومان</span></div>
+        <div class="cart-row"><span>تخفیف:</span><span>-</span></div>
+        <div class="cart-row"><span>مبلغ نهایی:</span><span id="cartFinal">0 تومان</span></div>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:1rem;font-size:1.1rem;padding:1rem" onclick="checkoutCart()">✅ ثبت سفارش و پرداخت</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ACCOUNT PAGE ===== -->
+<div class="page" id="page-account">
+  <div class="account-container">
+    <div class="section-title" style="margin-bottom:0.5rem">👤 حساب کاربری</div>
+    <p style="color:var(--text2);margin-bottom:2rem">به LVUP STORE خوش آمدی!</p>
+    <div id="authSection">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login',this)">ورود</div>
+        <div class="auth-tab" onclick="switchAuthTab('register',this)">ثبت‌نام</div>
+      </div>
+      <div class="auth-form" id="loginForm">
+        <div class="form-group">
+          <label class="form-label">📧 ایمیل یا نام کاربری</label>
+          <input type="text" class="form-input" id="loginUser" placeholder="ایمیل خود را وارد کنید">
+        </div>
+        <div class="form-group">
+          <label class="form-label">🔒 رمز عبور</label>
+          <div class="password-input-wrapper">
+            <input type="password" class="form-input" id="loginPass" placeholder="رمز عبور" style="padding-left:2.5rem">
+            <span class="toggle-pass" onclick="togglePassVis('loginPass',this)">👁️</span>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="doLogin()">🚀 ورود به حساب</button>
+      </div>
+      <div class="auth-form" id="registerForm" style="display:none">
+        <div class="form-group">
+          <label class="form-label">👤 نام و نام خانوادگی</label>
+          <input type="text" class="form-input" id="regName" placeholder="اسمت رو بنویس">
+        </div>
+        <div class="form-group">
+          <label class="form-label">📧 ایمیل</label>
+          <input type="email" class="form-input" id="regEmail" placeholder="ایمیل معتبر وارد کن">
+        </div>
+        <div class="form-group">
+          <label class="form-label">📱 شماره تلفن</label>
+          <input type="tel" class="form-input" id="regPhone" placeholder="09xxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">🎮 نام کاربری گیمینگ</label>
+          <input type="text" class="form-input" id="regUsername" placeholder="Username در بازی‌ها">
+        </div>
+        <div class="form-group">
+          <label class="form-label">🔒 رمز عبور</label>
+          <div class="password-input-wrapper">
+            <input type="password" class="form-input" id="regPass" placeholder="حداقل ۸ کاراکتر" style="padding-left:2.5rem">
+            <span class="toggle-pass" onclick="togglePassVis('regPass',this)">👁️</span>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="doRegister()">✨ ساخت حساب</button>
+      </div>
+    </div>
+    <div id="profileSection" style="display:none">
+      <div class="user-profile">
+        <div class="user-avatar" id="profileAvatar">LV</div>
+        <h2 id="profileName" style="font-size:1.3rem;margin-bottom:0.3rem"></h2>
+        <p id="profileEmail" style="color:var(--text2);font-size:0.9rem;margin-bottom:0.5rem"></p>
+        <div class="user-level">🏆 Level 1 Gamer</div>
+        <div class="user-stats">
+          <div class="stat-box">
+            <div class="num" id="profileOrders">0</div>
+            <div class="label">سفارش</div>
+          </div>
+          <div class="stat-box">
+            <div class="num" id="profileCart">0</div>
+            <div class="label">سبد خرید</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">⭐</div>
+            <div class="label">عضو</div>
+          </div>
+        </div>
+        <div style="margin-top:1.5rem;display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap">
+          <button class="btn-outline" onclick="showPage('shop')" style="font-family:'Vazirmatn',sans-serif;">🛒 خرید</button>
+          <button class="btn-outline" onclick="doLogout()" style="font-family:'Vazirmatn',sans-serif;border-color:#ef4444;color:#ef4444;">🚪 خروج</button>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem">
+        <div class="section-title" style="font-size:1.1rem;margin-bottom:1rem">📦 سفارشات اخیر</div>
+        <div id="userOrdersList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- ADMIN LOGIN -->
+<div class="modal-overlay" id="adminLoginModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ پنل مدیریت</div>
+      <button class="modal-close" onclick="closeModal('adminLoginModal')">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:3rem;margin-bottom:0.5rem">🔐</div>
+      <p style="color:var(--text2)">رمز ادمین را وارد کنید</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">🔑 رمز عبور ادمین</label>
+      <div class="password-input-wrapper">
+        <input type="password" class="form-input" id="adminPassInput" placeholder="رمز عبور" style="padding-left:2.5rem" onkeydown="if(event.key==='Enter')checkAdminPass()">
+        <span class="toggle-pass" onclick="togglePassVis('adminPassInput',this)">👁️</span>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:0.5rem" onclick="checkAdminPass()">🚀 ورود</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="modal-overlay" id="adminPanelModal">
+  <div class="modal" style="max-width:900px;width:95%">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ پنل مدیریت LVUP</div>
+      <button class="modal-close" onclick="closeModal('adminPanelModal');isAdminLoggedIn=false;">✕</button>
+    </div>
+
+    <!-- Admin Stats -->
+    <div class="admin-stats" id="adminStats"></div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs" style="margin-bottom:1.5rem">
+      <div class="auth-tab active" onclick="switchAdminTab('addProduct',this)">➕ افزودن سرویس</div>
+      <div class="auth-tab" onclick="switchAdminTab('manageCategories',this)">📂 دسته‌بندی‌ها</div>
+      <div class="auth-tab" onclick="switchAdminTab('orders',this)">📦 سفارشات</div>
+      <div class="auth-tab" onclick="switchAdminTab('homeContent',this)">🏠 محتوای خانه</div>
+    </div>
+
+    <!-- ADD PRODUCT TAB -->
+    <div id="tab-addProduct">
+      <div class="admin-form">
+        <h3>➕ <span id="editingId" style="display:none"></span> افزودن سرویس جدید</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">عنوان سرویس *</label>
+            <input type="text" class="form-input" id="pTitle" placeholder="مثلاً: شارژ CP وارزون">
+          </div>
+          <div class="form-group">
+            <label class="form-label">دسته‌بندی *</label>
+            <select class="form-select" id="pCategory">
+              <option value="">انتخاب کن...</option>
+              <option value="game">🎮 گیم</option>
+              <option value="telegram">✈️ تلگرام</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">زیردسته</label>
+            <select class="form-select" id="pSubCategory">
+              <option value="">انتخاب...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">قیمت (تومان) *</label>
+            <input type="number" class="form-input" id="pPrice" placeholder="مثلاً: 50000">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">لینک عکس بنر (URL)</label>
+            <input type="url" class="form-input" id="pImage" placeholder="https://...">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">توضیحات کوتاه</label>
+            <textarea class="form-textarea" id="pDesc" placeholder="توضیح مختصر درباره سرویس..."></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.8rem;margin-top:1rem">
+          <button class="btn-primary" onclick="saveProduct()">✅ ثبت سرویس</button>
+          <button class="btn-outline" onclick="clearProductForm()" style="font-family:'Vazirmatn',sans-serif">🗑️ پاک کردن</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGE CATEGORIES TAB -->
+    <div id="tab-manageCategories" style="display:none">
+      <div class="admin-form">
+        <h3>📂 افزودن دسته‌بندی</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">نام دسته‌بندی *</label>
+            <input type="text" class="form-input" id="catName" placeholder="مثلاً: وارزون">
+          </div>
+          <div class="form-group">
+            <label class="form-label">نوع *</label>
+            <select class="form-select" id="catType">
+              <option value="game">🎮 گیم</option>
+              <option value="telegram">✈️ تلگرام</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">آیکون (ایموجی)</label>
+            <input type="text" class="form-input" id="catIcon" placeholder="🎮">
+          </div>
+          <div class="form-group">
+            <label class="form-label">توضیح کوتاه</label>
+            <input type="text" class="form-input" id="catDesc" placeholder="توضیح...">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addCategory()" style="margin-top:1rem">✅ افزودن دسته‌بندی</button>
+      </div>
+      <div id="categoriesList"></div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.8rem">
+        <h3 style="color:var(--cyan);font-family:'Orbitron',monospace">📦 سفارشات مشتریان</h3>
+        <button class="btn-primary btn-sm" onclick="exportExcel()">📊 خروجی اکسل</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="orders-table" id="ordersTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>نام</th>
+              <th>تلفن</th>
+              <th>محصول</th>
+              <th>نوع</th>
+              <th>ایمیل/آیدی</th>
+              <th>رمز</th>
+              <th>قیمت</th>
+              <th>تاریخ</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- HOME CONTENT TAB -->
+    <div id="tab-homeContent" style="display:none">
+      <div class="admin-form">
+        <h3>📰 افزودن خبر / اعلان / تخفیف</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">عنوان *</label>
+            <input type="text" class="form-input" id="newsTitle" placeholder="عنوان خبر">
+          </div>
+          <div class="form-group">
+            <label class="form-label">نوع</label>
+            <select class="form-select" id="newsType">
+              <option value="news">📰 خبر</option>
+              <option value="discount">💰 تخفیف</option>
+              <option value="event">🎉 رویداد</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">متن</label>
+            <textarea class="form-textarea" id="newsContent" placeholder="متن خبر یا اعلان..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">کد تخفیف (اختیاری)</label>
+            <input type="text" class="form-input" id="newsCode" placeholder="LVUP15">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addNews()" style="margin-top:1rem">✅ انتشار</button>
+      </div>
+      <div id="newsList" style="margin-top:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BUY MODAL -->
+<div class="modal-overlay" id="buyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="buyModalTitle">🛒 ثبت سفارش</div>
+      <button class="modal-close" onclick="closeModal('buyModal')">✕</button>
+    </div>
+    <div id="buyProductInfo" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1.3rem;display:flex;align-items:center;gap:1rem">
+    </div>
+    <div class="form-group">
+      <label class="form-label">👤 نام و نام خانوادگی *</label>
+      <input type="text" class="form-input" id="buyName" placeholder="اسم کامل">
+    </div>
+    <div class="form-group">
+      <label class="form-label">📱 شماره تلفن *</label>
+      <input type="tel" class="form-input" id="buyPhone" placeholder="09xxxxxxxxx">
+    </div>
+    <!-- Game fields -->
+    <div id="gameFields">
+      <div class="form-group">
+        <label class="form-label">📧 جیمیل (Gmail) *</label>
+        <input type="email" class="form-input" id="buyEmail" placeholder="example@gmail.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔑 پسورد *</label>
+        <div class="password-input-wrapper">
+          <input type="password" class="form-input" id="buyPassword" placeholder="رمز حساب بازی" style="padding-left:2.5rem">
+          <span class="toggle-pass" onclick="togglePassVis('buyPassword',this)">👁️</span>
+        </div>
+      </div>
+    </div>
+    <!-- Telegram fields -->
+    <div id="telegramFields" style="display:none">
+      <div class="form-group">
+        <label class="form-label">✈️ آیدی تلگرام *</label>
+        <input type="text" class="form-input" id="buyTelegramId" placeholder="@username">
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:0.5rem;padding:0.9rem;font-size:1rem" onclick="submitOrder()">✅ ثبت سفارش</button>
+  </div>
+</div>
+
+<!-- CART CHECKOUT MODAL -->
+<div class="modal-overlay" id="cartModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🛒 تسویه سبد خرید</div>
+      <button class="modal-close" onclick="closeModal('cartModal')">✕</button>
+    </div>
+    <p style="color:var(--text2);margin-bottom:1rem;font-size:0.9rem">اطلاعات خود را وارد کنید تا سفارش ثبت شود</p>
+    <div class="form-group">
+      <label class="form-label">👤 نام و نام خانوادگی *</label>
+      <input type="text" class="form-input" id="cartName" placeholder="اسم کامل">
+    </div>
+    <div class="form-group">
+      <label class="form-label">📱 شماره تلفن *</label>
+      <input type="tel" class="form-input" id="cartPhone" placeholder="09xxxxxxxxx">
+    </div>
+    <div class="form-group">
+      <label class="form-label">📧 ایمیل (اختیاری)</label>
+      <input type="email" class="form-input" id="cartEmail" placeholder="example@gmail.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">✈️ آیدی تلگرام (اختیاری)</label>
+      <input type="text" class="form-input" id="cartTelegram" placeholder="@username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">🔑 رمز (برای خدمات گیمینگ)</label>
+      <input type="password" class="form-input" id="cartPassword" placeholder="رمز حساب بازی">
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:0.5rem" onclick="submitCartOrder()">✅ ثبت همه سفارشات</button>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal" style="max-width:400px">
+    <div class="success-content">
+      <div class="success-icon">🎉</div>
+      <h2>سفارش ثبت شد!</h2>
+      <p style="margin-top:0.5rem;color:var(--text2)">سفارش شما با موفقیت ثبت شد. به زودی با شما تماس می‌گیریم 🔥</p>
+      <div style="margin-top:1.5rem;background:var(--bg3);border:1px dashed var(--border);border-radius:12px;padding:1rem">
+        <p style="font-size:0.85rem;color:var(--text2)">📞 اگه سوالی داشتی از چت پشتیبانی استفاده کن یا به تلگرام ما پیام بده</p>
+      </div>
+      <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="closeModal('successModal')">👍 عالیه!</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- ===== CHATBOT ===== -->
+<div class="chat-widget">
+  <div class="chat-box" id="chatBox">
+    <div class="chat-header">
+      <div class="chat-avatar">🎮</div>
+      <div class="chat-header-info">
+        <h4>پشتیبانی LVUP</h4>
+        <div class="chat-status"><div class="online-dot"></div> آنلاین - معمولاً سریع جواب میده</div>
+      </div>
+      <button onclick="toggleChat()" style="background:none;border:none;color:white;cursor:pointer;font-size:1.2rem;margin-right:auto">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages here -->
+    </div>
+    <div class="typing-indicator" id="typingIndicator">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chatInput" placeholder="پیامت رو بنویس..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+      <button class="chat-send" onclick="sendChatMsg()">➤</button>
+    </div>
+  </div>
+  <button class="chat-toggle" onclick="toggleChat()">💬</button>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div style="overflow:hidden;white-space:nowrap">
+    <span class="footer-marquee">⚡ © 2026 LVUP STORE - Power Level Up! 🔥 بهترین خدمات گیمینگ ایران 🎮 سریع، مطمئن، ۲۴ ساعته ⚡ © 2026 LVUP STORE - Power Level Up! 🔥</span>
+  </div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ========== STATE ==========
+let isAdminLoggedIn = false;
+let currentFilter = 'all';
+let editingProductId = null;
+let currentBuyProduct = null;
+let cart = [];
+let currentUser = null;
+let chatOpen = false;
+let newChatCount = 0;
+
+const ADMIN_PASS = 'Admin@Lvup2026';
+
+// ========== LOCAL STORAGE ==========
+function getLS(key, def=[]) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+}
+function setLS(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+function getProducts() { return getLS('lvup_products'); }
+function setProducts(p) { setLS('lvup_products', p); }
+function getOrders() { return getLS('lvup_orders'); }
+function setOrders(o) { setLS('lvup_orders', o); }
+function getCategories() { return getLS('lvup_categories', defaultCategories()); }
+function setCategories(c) { setLS('lvup_categories', c); }
+function getNews() { return getLS('lvup_news', defaultNews()); }
+function setNews(n) { setLS('lvup_news', n); }
+function getUsers() { return getLS('lvup_users'); }
+function setUsers(u) { setLS('lvup_users', u); }
+function getCart() { return getLS('lvup_cart'); }
+function setCart(c) { setLS('lvup_cart', c); }
+
+function defaultCategories() {
+  return [
+    { id: 1, name: 'وارزون', type: 'game', icon: '🔫', desc: 'خدمات Call of Duty Warzone' },
+    { id: 2, name: 'فری فایر', type: 'game', icon: '🔥', desc: 'خدمات Free Fire' },
+    { id: 3, name: 'پابجی', type: 'game', icon: '🪖', desc: 'خدمات PUBG' },
+    { id: 4, name: 'فورتنایت', type: 'game', icon: '🌀', desc: 'خدمات Fortnite' },
+    { id: 5, name: 'افزایش ممبر', type: 'telegram', icon: '👥', desc: 'افزایش عضو کانال و گروه' },
+    { id: 6, name: 'بازدید', type: 'telegram', icon: '👁️', desc: 'افزایش بازدید پست' },
+  ];
+}
+
+function defaultNews() {
+  return [
+    { id:1, title:'LVUP STORE رسماً راه‌اندازی شد! 🎉', content:'ما اینجاییم تا بهترین خدمات گیمینگ رو بهتون بدیم. منتظر خدمات جدید باشید!', type:'news', date: new Date().toLocaleDateString('fa-IR') },
+    { id:2, title:'تخفیف ۱۵٪ روی همه خدمات گیمینگ 🔥', content:'با کد LVUP15 روی تمام خدمات گیمینگ تخفیف بگیر. فقط تا آخر هفته!', type:'discount', code:'LVUP15', date: new Date().toLocaleDateString('fa-IR') },
+    { id:3, title:'فصل جدید وارزون شروع شد! 🎮', content:'آماده فصل جدیدی? ما خدمات شارژ CP و آنلاک آیتم داریم. همین الان سفارش بده!', type:'event', date: new Date().toLocaleDateString('fa-IR') },
+  ];
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+  cart = getCart();
+  currentUser = getLS('lvup_current_user', null);
+  updateCartBadge();
+  renderProducts();
+  renderCategories();
+  renderNews();
+  updateSubCategories();
+  if (currentUser) showProfile();
+  setTimeout(() => addBotMsg('سلام! 👋 خوش اومدی به LVUP STORE 🎮\nچیزی لازم داری؟ من اینجام که کمک کنم 😊'), 1000);
+});
+
+// ========== THEME ==========
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light-mode', !isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  showToast(isDark ? '🌙 تم شب فعال شد' : '☀️ تم روز فعال شد', 'ℹ️');
+}
+
+// ========== PAGES ==========
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (pg) pg.classList.add('active');
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+
+  if (id === 'shop') { renderProducts(); renderAdminBanner(); renderCategoryFilterBtns(); }
+  if (id === 'search') doSearch();
+  if (id === 'categories') renderCategories();
+  if (id === 'cart') renderCart();
+  if (id === 'account') checkAccountPage();
+  window.scrollTo(0, 0);
+}
+
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+// ========== PRODUCTS ==========
+function renderProducts(filter = currentFilter) {
+  const products = getProducts();
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+
+  let filtered = products;
+  if (filter !== 'all') filtered = products.filter(p => p.category === filter);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="emoji">${filter === 'game' ? '🎮' : filter === 'telegram' ? '✈️' : '🛍️'}</div><h3>هنوز خدماتی اضافه نشده</h3><p>ادمین به زودی خدمات رو اضافه می‌کنه!</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => productCardHTML(p)).join('');
+}
+
+function productCardHTML(p) {
+  const isGame = p.category === 'game';
+  const imgContent = p.image
+    ? `<img src="${p.image}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='${isGame ? '🎮' : '✈️'}';">`
+    : `<span style="font-size:3.5rem">${isGame ? '🎮' : '✈️'}</span>`;
+
+  const adminActions = isAdminLoggedIn ? `
+    <div class="admin-card-actions">
+      <button class="edit-btn" onclick="editProduct(${p.id})">✏️ ویرایش</button>
+      <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑️ حذف</button>
+    </div>` : '';
+
+  return `
+    <div class="product-card" id="pcard-${p.id}">
+      <div class="product-card-img">
+        ${imgContent}
+        <div class="product-category-badge ${isGame ? 'badge-game' : 'badge-telegram'}">${isGame ? '🎮 گیم' : '✈️ تلگرام'}</div>
+      </div>
+      <div class="product-card-body">
+        <h3>${p.title}</h3>
+        <p>${p.desc || 'خدمات حرفه‌ای با کیفیت بالا'}</p>
+        <div class="product-footer">
+          <div class="product-price">${Number(p.price).toLocaleString('fa-IR')} <span>تومان</span></div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="buy-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)" onclick="addToCartById(${p.id})">🛒</button>
+            <button class="buy-btn" onclick="openBuyModal(${p.id})">خرید</button>
+          </div>
+        </div>
+        ${adminActions}
+      </div>
+    </div>`;
+}
+
+function filterProducts(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts(filter);
+}
+
+function addToCartById(id) {
+  const products = getProducts();
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const idx = cart.findIndex(c => c.id === id);
+  if (idx > -1) { cart[idx].qty = (cart[idx].qty || 1) + 1; }
+  else { cart.push({ ...p, qty: 1 }); }
+  setCart(cart);
+  updateCartBadge();
+  showToast(`${p.title} به سبد خرید اضافه شد 🛒`, '✅');
+}
+
+function updateCartBadge() {
+  cart = getCart();
+  const total = cart.reduce((s, c) => s + (c.qty || 1), 0);
+  const badge = document.getElementById('cartBadge');
+  if (total > 0) { badge.style.display = 'flex'; badge.textContent = total; }
+  else badge.style.display = 'none';
+}
+
+function renderCart() {
+  cart = getCart();
+  const container = document.getElementById('cartItems');
+  const summary = document.getElementById('cartSummarySection');
+
+  if (cart.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🛒</div><h3>سبد خریدت خالیه!</h3><p>برو یه چیزی انتخاب کن 😊</p><br><button class="btn-primary" onclick="showPage('shop')">🛍️ رفتن به فروشگاه</button></div>`;
+    summary.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-img">
+        ${item.image ? `<img src="${item.image}" onerror="this.parentNode.textContent='${item.category==='game'?'🎮':'✈️'}'">` : (item.category === 'game' ? '🎮' : '✈️')}
+      </div>
+      <div class="cart-item-info">
+        <h4>${item.title}</h4>
+        <p>${item.category === 'game' ? '🎮 گیم' : '✈️ تلگرام'}</p>
+        <div class="qty-control" style="margin-top:0.5rem">
+          <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+          <span class="qty-num">${item.qty || 1}</span>
+          <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+        </div>
+      </div>
+      <div class="cart-item-price">${(Number(item.price) * (item.qty||1)).toLocaleString('fa-IR')} ت</div>
+      <button class="cart-remove" onclick="removeFromCart(${item.id})">🗑️</button>
+    </div>`).join('');
+
+  const total = cart.reduce((s, c) => s + (Number(c.price) * (c.qty || 1)), 0);
+  const count = cart.reduce((s, c) => s + (c.qty || 1), 0);
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = total.toLocaleString('fa-IR') + ' تومان';
+  document.getElementById('cartFinal').textContent = total.toLocaleString('fa-IR') + ' تومان';
+  summary.style.display = 'block';
+}
+
+function changeQty(id, delta) {
+  const idx = cart.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  cart[idx].qty = Math.max(1, (cart[idx].qty || 1) + delta);
+  setCart(cart);
+  renderCart();
+  updateCartBadge();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  setCart(cart);
+  renderCart();
+  updateCartBadge();
+  showToast('آیتم از سبد حذف شد', '🗑️');
+}
+
+function checkoutCart() {
+  if (cart.length === 0) return;
+  document.getElementById('cartModal').classList.add('show');
+}
+
+function submitCartOrder() {
+  const name = document.getElementById('cartName').value.trim();
+  const phone = document.getElementById('cartPhone').value.trim();
+  if (!name || !phone) { showToast('اسم و شماره رو وارد کن!', '⚠️'); return; }
+  if (!validatePhone(phone)) { showToast('شماره تلفن معتبر نیست!', '⚠️'); return; }
+
+  const orders = getOrders();
+  cart.forEach(item => {
+    orders.push({
+      id: Date.now() + Math.random(),
+      name, phone,
+      email: document.getElementById('cartEmail').value,
+      telegramId: document.getElementById('cartTelegram').value,
+      password: document.getElementById('cartPassword').value,
+      productTitle: item.title,
+      productCategory: item.category,
+      price: item.price,
+      qty: item.qty || 1,
+      date: new Date().toLocaleDateString('fa-IR')
+    });
+  });
+  setOrders(orders);
+  cart = []; setCart(cart); updateCartBadge();
+  closeModal('cartModal');
+  document.getElementById('cartModal').querySelectorAll('input').forEach(i => i.value = '');
+  document.getElementById('successModal').classList.add('show');
+  if (isAdminLoggedIn) { newChatCount++; document.getElementById('adminNotif').style.display = 'flex'; }
+}
+
+// ========== BUY MODAL ==========
+function openBuyModal(productId) {
+  const products = getProducts();
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+  currentBuyProduct = p;
+
+  document.getElementById('buyModalTitle').textContent = `🛒 خرید: ${p.title}`;
+  document.getElementById('buyProductInfo').innerHTML = `
+    <div style="font-size:2.5rem">${p.category === 'game' ? '🎮' : '✈️'}</div>
+    <div>
+      <div style="font-weight:700">${p.title}</div>
+      <div style="color:var(--green);font-family:'Orbitron',monospace;font-size:1rem">${Number(p.price).toLocaleString('fa-IR')} تومان</div>
+    </div>`;
+
+  const isGame = p.category === 'game';
+  document.getElementById('gameFields').style.display = isGame ? 'block' : 'none';
+  document.getElementById('telegramFields').style.display = isGame ? 'none' : 'block';
+  document.getElementById('buyModal').classList.add('show');
+
+  ['buyName','buyPhone','buyEmail','buyPassword','buyTelegramId'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  if (currentUser) {
+    document.getElementById('buyName').value = currentUser.name || '';
+    document.getElementById('buyPhone').value = currentUser.phone || '';
+    if (isGame) document.getElementById('buyEmail').value = currentUser.email || '';
+  }
+}
+
+function submitOrder() {
+  const name = document.getElementById('buyName').value.trim();
+  const phone = document.getElementById('buyPhone').value.trim();
+  if (!name) { showToast('اسمت رو وارد کن!', '⚠️'); return; }
+  if (!validatePhone(phone)) { showToast('شماره تلفن معتبر نیست (09xxxxxxxxx)', '⚠️'); return; }
+
+  const isGame = currentBuyProduct.category === 'game';
+  let email='', password='', telegramId='';
+
+  if (isGame) {
+    email = document.getElementById('buyEmail').value.trim();
+    password = document.getElementById('buyPassword').value;
+    if (!email || !password) { showToast('جیمیل و پسورد الزامی است!', '⚠️'); return; }
+  } else {
+    telegramId = document.getElementById('buyTelegramId').value.trim();
+    if (!telegramId) { showToast('آیدی تلگرام الزامی است!', '⚠️'); return; }
+  }
+
+  const orders = getOrders();
+  orders.push({
+    id: Date.now(),
+    name, phone, email, password, telegramId,
+    productTitle: currentBuyProduct.title,
+    productId: currentBuyProduct.id,
+    productCategory: currentBuyProduct.category,
+    price: currentBuyProduct.price,
+    qty: 1,
+    date: new Date().toLocaleDateString('fa-IR')
+  });
+  setOrders(orders);
+  closeModal('buyModal');
+  document.getElementById('successModal').classList.add('show');
+  if (isAdminLoggedIn) { newChatCount++; document.getElementById('adminNotif').style.display = 'flex'; }
+
+  if (currentUser) {
+    const profile = document.getElementById('profileOrders');
+    if (profile) profile.textContent = orders.filter(o => o.phone === currentUser.phone).length;
+  }
+}
+
+function validatePhone(p) { return /^09\d{9}$/.test(p); }
+
+// ========== ADMIN ==========
+function openAdminModal() {
+  if (isAdminLoggedIn) { openAdminPanel(); return; }
+  document.getElementById('adminLoginModal').classList.add('show');
+  document.getElementById('adminPassInput').value = '';
+  setTimeout(() => document.getElementById('adminPassInput').focus(), 100);
+}
+
+function checkAdminPass() {
+  const pass = document.getElementById('adminPassInput').value;
+  if (pass === ADMIN_PASS) {
+    isAdminLoggedIn = true;
+    closeModal('adminLoginModal');
+    openAdminPanel();
+    document.getElementById('adminNotif').style.display = 'none';
+    showToast('خوش اومدی ادمین! 🔥', '✅');
+  } else {
+    showToast('رمز اشتباهه!', '❌');
+    document.getElementById('adminPassInput').style.borderColor = '#ef4444';
+    setTimeout(() => document.getElementById('adminPassInput').style.borderColor = '', 1500);
+  }
+}
+
+function openAdminPanel() {
+  renderAdminStats();
+  renderOrdersTable();
+  renderCategoriesList();
+  renderNewsList();
+  updateSubCategories();
+  document.getElementById('adminPanelModal').classList.add('show');
+}
+
+function renderAdminStats() {
+  const products = getProducts();
+  const orders = getOrders();
+  const cats = getCategories();
+  document.getElementById('adminStats').innerHTML = `
+    <div class="admin-stat-card"><div class="num" style="color:var(--purple)">${products.length}</div><div class="label">محصولات</div></div>
+    <div class="admin-stat-card"><div class="num" style="color:var(--cyan)">${orders.length}</div><div class="label">سفارشات</div></div>
+    <div class="admin-stat-card"><div class="num" style="color:var(--green)">${orders.reduce((s,o)=>s+Number(o.price||0),0).toLocaleString('fa-IR')}</div><div class="label">درآمد (ت)</div></div>
+    <div class="admin-stat-card"><div class="num" style="color:var(--pink)">${cats.length}</div><div class="label">دسته‌بندی‌ها</div></div>`;
+}
+
+function switchAdminTab(tab, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => { if (el.closest('#adminPanelModal')) el.style.display = 'none'; });
+  document.getElementById('tab-' + tab).style.display = 'block';
+  btn.closest('.auth-tabs').querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'orders') renderOrdersTable();
+  if (tab === 'manageCategories') renderCategoriesList();
+  if (tab === 'homeContent') renderNewsList();
+}
+
+function saveProduct() {
+  const title = document.getElementById('pTitle').value.trim();
+  const category = document.getElementById('pCategory').value;
+  const price = document.getElementById('pPrice').value;
+  const image = document.getElementById('pImage').value.trim();
+  const desc = document.getElementById('pDesc').value.trim();
+  const subCat = document.getElementById('pSubCategory').value;
+
+  if (!title || !category || !price) { showToast('عنوان، دسته‌بندی و قیمت الزامی است!', '⚠️'); return; }
+
+  const products = getProducts();
+  if (editingProductId !== null) {
+    const idx = products.findIndex(p => p.id === editingProductId);
+    if (idx > -1) products[idx] = { ...products[idx], title, category, price: Number(price), image, desc, subCat };
+    editingProductId = null;
+    showToast('محصول ویرایش شد! ✅', '✅');
+  } else {
+    products.push({ id: Date.now(), title, category, price: Number(price), image, desc, subCat, createdAt: Date.now() });
+    showToast('محصول جدید اضافه شد! 🎉', '✅');
+  }
+  setProducts(products);
+  clearProductForm();
+  renderProducts();
+  renderAdminStats();
+  updateSubCategories();
+}
+
+function clearProductForm() {
+  ['pTitle','pPrice','pImage','pDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pCategory').value = '';
+  document.getElementById('pSubCategory').value = '';
+  editingProductId = null;
+  document.querySelector('#tab-addProduct .admin-form h3').innerHTML = '➕ افزودن سرویس جدید';
+}
+
+function editProduct(id) {
+  const products = getProducts();
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  editingProductId = id;
+  document.getElementById('pTitle').value = p.title;
+  document.getElementById('pCategory').value = p.category;
+  document.getElementById('pPrice').value = p.price;
+  document.getElementById('pImage').value = p.image || '';
+  document.getElementById('pDesc').value = p.desc || '';
+  updateSubCategories();
+  document.querySelector('#tab-addProduct .admin-form h3').innerHTML = `✏️ ویرایش: ${p.title}`;
+  openAdminPanel();
+  switchAdminTab('addProduct', document.querySelector('#adminPanelModal .auth-tab'));
+}
+
+function deleteProduct(id) {
+  if (!confirm('این محصول حذف بشه?')) return;
+  let products = getProducts().filter(p => p.id !== id);
+  setProducts(products);
+  renderProducts();
+  renderAdminStats();
+  showToast('محصول حذف شد', '🗑️');
+}
+
+function renderAdminBanner() {
+  const b = document.getElementById('adminBanner');
+  if (!isAdminLoggedIn) { b.style.display = 'none'; return; }
+  b.style.display = 'block';
+  b.innerHTML = `
+    <div class="admin-banner">
+      <div>
+        <h2>⚙️ حالت ادمین فعال</h2>
+        <p style="color:var(--text2);font-size:0.85rem">می‌تونی محصولات رو ویرایش یا حذف کنی</p>
+      </div>
+      <div class="admin-banner-actions">
+        <button class="btn-primary btn-sm" onclick="openAdminPanel()">➕ افزودن محصول</button>
+        <button class="btn-primary btn-sm" style="background:var(--green)" onclick="exportExcel()">📊 اکسل</button>
+        <button class="btn-outline btn-sm" onclick="isAdminLoggedIn=false;renderAdminBanner();renderProducts();showToast('خروج از ادمین','👋')" style="font-family:'Vazirmatn',sans-serif;">🚪 خروج</button>
+      </div>
+    </div>`;
+}
+
+// ========== CATEGORIES ==========
+function updateSubCategories() {
+  const cats = getCategories();
+  const catType = document.getElementById('pCategory')?.value;
+  const sel = document.getElementById('pSubCategory');
+  if (!sel) return;
+  const filtered = catType ? cats.filter(c => c.type === catType) : cats;
+  sel.innerHTML = '<option value="">انتخاب زیردسته...</option>' + filtered.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+}
+
+document.getElementById('pCategory')?.addEventListener('change', updateSubCategories);
+
+function addCategory() {
+  const name = document.getElementById('catName').value.trim();
+  const type = document.getElementById('catType').value;
+  const icon = document.getElementById('catIcon').value.trim() || (type === 'game' ? '🎮' : '✈️');
+  const desc = document.getElementById('catDesc').value.trim();
+  if (!name) { showToast('نام دسته‌بندی الزامی است!', '⚠️'); return; }
+
+  const cats = getCategories();
+  if (cats.find(c => c.name === name)) { showToast('این دسته‌بندی قبلاً وجود دارد!', '⚠️'); return; }
+  cats.push({ id: Date.now(), name, type, icon, desc });
+  setCategories(cats);
+  renderCategoriesList();
+  renderCategories();
+  updateSubCategories();
+  ['catName','catIcon','catDesc'].forEach(id => document.getElementById(id).value = '');
+  showToast('دسته‌بندی اضافه شد! 🎉', '✅');
+}
+
+function deleteCategory(id) {
+  if (!confirm('این دسته‌بندی حذف بشه?')) return;
+  setCategories(getCategories().filter(c => c.id !== id));
+  renderCategoriesList();
+  renderCategories();
+  updateSubCategories();
+  showToast('حذف شد', '🗑️');
+}
+
+function renderCategoriesList() {
+  const cats = getCategories();
+  const el = document.getElementById('categoriesList');
+  if (!el) return;
+  if (cats.length === 0) { el.innerHTML = '<p style="color:var(--text2);text-align:center;padding:1rem">هنوز دسته‌بندی‌ای نداری</p>'; return; }
+  el.innerHTML = cats.map(c => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.8rem 1.2rem;display:flex;align-items:center;gap:0.8rem;margin-bottom:0.7rem">
+      <span style="font-size:1.5rem">${c.icon}</span>
+      <div style="flex:1"><div style="font-weight:700">${c.name}</div><div style="font-size:0.8rem;color:var(--text2)">${c.type === 'game' ? '🎮 گیم' : '✈️ تلگرام'} • ${c.desc || '-'}</div></div>
+      <button class="delete-btn" style="padding:0.3rem 0.8rem" onclick="deleteCategory(${c.id})">🗑️</button>
+    </div>`).join('');
+}
+
+function renderCategories() {
+  const cats = getCategories();
+  const products = getProducts();
+  const grid = document.getElementById('categoriesGrid');
+  if (!grid) return;
+
+  const defaultCats = [
+    { id: 'game', name: 'خدمات گیم‌ها', icon: '🎮', desc: 'تمام خدمات مربوط به بازی‌های آنلاین', type: 'main' },
+    { id: 'telegram', name: 'خدمات تلگرام', icon: '✈️', desc: 'افزایش ممبر، بازدید و سایر خدمات', type: 'main' },
+  ];
+
+  const allCats = [...defaultCats, ...cats];
+
+  grid.innerHTML = allCats.map(c => {
+    const count = products.filter(p => (c.type === 'main' ? p.category === c.id : p.subCat === c.name)).length;
+    return `
+      <div class="category-card" onclick="showPage('shop');filterProducts('${c.type === 'main' ? c.id : 'all'}',document.querySelector('.filter-btn'))">
+        <div class="category-icon">${c.icon}</div>
+        <h3>${c.name}</h3>
+        <p>${c.desc || ''}</p>
+        <span class="category-count">${count} خدمت</span>
+      </div>`;
+  }).join('');
+}
+
+// ========== ORDERS & EXCEL ==========
+function renderOrdersTable() {
+  const orders = getOrders();
+  const tbody = document.getElementById('ordersBody');
+  if (!tbody) return;
+  if (orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text2)">هنوز سفارشی ثبت نشده</td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map((o, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td title="${o.name}">${o.name}</td>
+      <td>${o.phone}</td>
+      <td title="${o.productTitle}">${o.productTitle}</td>
+      <td>${o.productCategory === 'game' ? '🎮' : '✈️'}</td>
+      <td title="${o.email || o.telegramId || '-'}">${o.email || o.telegramId || '-'}</td>
+      <td>${o.password ? '●●●●' : '-'}</td>
+      <td style="color:var(--green)">${Number(o.price).toLocaleString('fa-IR')}</td>
+      <td>${o.date}</td>
+    </tr>`).join('');
+}
+
+function exportExcel() {
+  const orders = getOrders();
+  if (orders.length === 0) { showToast('هنوز سفارشی ثبت نشده!', '⚠️'); return; }
+  const data = orders.map((o, i) => ({
+    'ردیف': i + 1,
+    'نام': o.name,
+    'شماره تلفن': o.phone,
+    'محصول': o.productTitle,
+    'دسته‌بندی': o.productCategory === 'game' ? 'گیم' : 'تلگرام',
+    'ایمیل': o.email || '-',
+    'رمز عبور': o.password || '-',
+    'آیدی تلگرام': o.telegramId || '-',
+    'قیمت (تومان)': o.price,
+    'تعداد': o.qty || 1,
+    'تاریخ': o.date
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+  XLSX.writeFile(wb, `LVUP_Orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('فایل اکسل دانلود شد! 📊', '✅');
+}
+
+// ========== NEWS ==========
+function renderNews() {
+  const news = getNews();
+  const grid = document.getElementById('newsGrid');
+  if (!grid) return;
+  const typeMap = { news: { class: 'tag-news', label: '📰 خبر' }, discount: { class: 'tag-discount', label: '💰 تخفیف' }, event: { class: 'tag-event', label: '🎉 رویداد' } };
+  grid.innerHTML = news.map(n => {
+    const t = typeMap[n.type] || typeMap.news;
+    return `
+      <div class="news-card">
+        <div class="news-card-img" style="font-size:3rem">${n.type === 'news' ? '📰' : n.type === 'discount' ? '💰' : '🎉'}</div>
+        <div class="news-card-body">
+          <span class="news-tag ${t.class}">${t.label}</span>
+          <h3>${n.title}</h3>
+          <p>${n.content}</p>
+          ${n.code ? `<div onclick="copyCode(this)" style="margin-top:0.7rem;display:inline-block;padding:0.3rem 0.8rem;background:rgba(16,185,129,0.1);border:1px dashed var(--green);border-radius:8px;color:var(--green);cursor:pointer;font-family:'Orbitron',monospace;font-size:0.9rem">🏷️ ${n.code}</div>` : ''}
+          <div class="news-date">📅 ${n.date}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function addNews() {
+  const title = document.getElementById('newsTitle').value.trim();
+  const content = document.getElementById('newsContent').value.trim();
+  const type = document.getElementById('newsType').value;
+  const code = document.getElementById('newsCode').value.trim();
+  if (!title || !content) { showToast('عنوان و متن الزامی است!', '⚠️'); return; }
+  const news = getNews();
+  news.unshift({ id: Date.now(), title, content, type, code, date: new Date().toLocaleDateString('fa-IR') });
+  setNews(news);
+  renderNews();
+  renderNewsList();
+  ['newsTitle','newsContent','newsCode'].forEach(id => document.getElementById(id).value = '');
+  showToast('خبر منتشر شد! 📰', '✅');
+  if (code) document.getElementById('discountCodeEl').textContent = code;
+}
+
+function renderNewsList() {
+  const news = getNews();
+  const el = document.getElementById('newsList');
+  if (!el) return;
+  el.innerHTML = news.map(n => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.8rem 1.2rem;display:flex;align-items:center;gap:0.8rem;margin-bottom:0.7rem">
+      <span style="font-size:1.5rem">${n.type==='news'?'📰':n.type==='discount'?'💰':'🎉'}</span>
+      <div style="flex:1"><div style="font-weight:700;font-size:0.9rem">${n.title}</div><div style="font-size:0.8rem;color:var(--text2)">${n.date}</div></div>
+      <button class="delete-btn" style="padding:0.3rem 0.8rem" onclick="deleteNews(${n.id})">🗑️</button>
+    </div>`).join('');
+}
+
+function deleteNews(id) {
+  setNews(getNews().filter(n => n.id !== id));
+  renderNews(); renderNewsList();
+  showToast('حذف شد', '🗑️');
+}
+
+function copyCode(el) {
+  const code = el.textContent.replace(/[^A-Za-z0-9]/g, '');
+  navigator.clipboard.writeText(code).then(() => showToast(`کد ${code} کپی شد! 🎉`, '✅')).catch(() => showToast('کپی نشد، دستی کپی کن', '⚠️'));
+}
+
+// ========== SEARCH ==========
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+  const cat = document.getElementById('filterCatSelect').value;
+  let products = getProducts();
+
+  if (cat !== 'all') products = products.filter(p => p.category === cat);
+  if (q) products = products.filter(p => p.title.toLowerCase().includes(q) || (p.desc || '').toLowerCase().includes(q));
+
+  if (sort === 'newest') products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  else if (sort === 'oldest') products.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  else if (sort === 'price-asc') products.sort((a, b) => a.price - b.price);
+  else if (sort === 'price-desc') products.sort((a, b) => b.price - a.price);
+
+  const info = document.getElementById('searchInfo');
+  const results = document.getElementById('searchResults');
+  info.innerHTML = q ? `<span>${products.length}</span> نتیجه برای "<span>${q}</span>"` : `<span>${products.length}</span> خدمت موجود`;
+
+  if (products.length === 0) {
+    results.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="emoji">🔍</div><h3>چیزی پیدا نشد!</h3><p>کلمه دیگه‌ای امتحان کن</p></div>`;
+    return;
+  }
+  results.innerHTML = products.map(p => productCardHTML(p)).join('');
+}
+
+// ========== ACCOUNT ==========
+function switchAuthTab(tab, btn) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+  btn.closest('.auth-tabs').querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) { showToast('اطلاعات ورود رو کامل کن!', '⚠️'); return; }
+  const users = getUsers();
+  const found = users.find(u => (u.email === user || u.username === user) && u.password === pass);
+  if (!found) { showToast('ایمیل یا رمز اشتباهه!', '❌'); return; }
+  currentUser = found;
+  setLS('lvup_current_user', found);
+  showProfile();
+  showToast(`خوش اومدی ${found.name}! 🎮`, '✅');
+}
+
+function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if (!name || !email || !phone || !pass) { showToast('همه فیلدهای ستاره‌دار رو پر کن!', '⚠️'); return; }
+  if (!validatePhone(phone)) { showToast('شماره تلفن معتبر نیست!', '⚠️'); return; }
+  if (pass.length < 8) { showToast('رمز باید حداقل ۸ کاراکتر باشه!', '⚠️'); return; }
+  const users = getUsers();
+  if (users.find(u => u.email === email)) { showToast('این ایمیل قبلاً ثبت شده!', '⚠️'); return; }
+  const newUser = { id: Date.now(), name, email, phone, username: username || name, password: pass, createdAt: Date.now() };
+  users.push(newUser);
+  setUsers(users);
+  currentUser = newUser;
+  setLS('lvup_current_user', newUser);
+  showProfile();
+  showToast(`حساب ساخته شد! خوش اومدی ${name} 🎉`, '✅');
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('lvup_current_user');
+  document.getElementById('profileSection').style.display = 'none';
+  document.getElementById('authSection').style.display = 'block';
+  showToast('خروج موفق 👋', 'ℹ️');
+}
+
+function showProfile() {
+  const orders = getOrders().filter(o => o.phone === currentUser.phone);
+  document.getElementById('authSection').style.display = 'none';
+  document.getElementById('profileSection').style.display = 'block';
+  document.getElementById('profileAvatar').textContent = currentUser.name?.substring(0, 2).toUpperCase() || 'LV';
+  document.getElementById('profileName').textContent = currentUser.name;
+  document.getElementById('profileEmail').textContent = currentUser.email;
+  document.getElementById('profileOrders').textContent = orders.length;
+  document.getElementById('profileCart').textContent = getCart().length;
+
+  const ordersList = document.getElementById('userOrdersList');
+  if (orders.length === 0) {
+    ordersList.innerHTML = '<div class="empty-state" style="padding:2rem"><div class="emoji">📦</div><h3>هنوز سفارشی ندادی!</h3></div>';
+  } else {
+    ordersList.innerHTML = orders.slice(-5).reverse().map(o => `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1.2rem;margin-bottom:0.7rem;display:flex;align-items:center;justify-content:space-between;gap:1rem">
+        <div style="display:flex;align-items:center;gap:0.7rem">
+          <span>${o.productCategory==='game'?'🎮':'✈️'}</span>
+          <div><div style="font-weight:700;font-size:0.9rem">${o.productTitle}</div><div style="font-size:0.8rem;color:var(--text2)">${o.date}</div></div>
+        </div>
+        <div style="color:var(--green);font-family:'Orbitron',monospace;font-size:0.9rem">${Number(o.price).toLocaleString('fa-IR')} ت</div>
+      </div>`).join('');
+  }
+}
+
+function checkAccountPage() {
+  currentUser = getLS('lvup_current_user', null);
+  if (currentUser) showProfile();
+}
+
+// ========== CHATBOT ==========
+const botResponses = [
+  { keywords: ['سلام','درود','خوبی','هستی'], replies: ['سلام! 😊 خوش اومدی داداش، چطور میتونم کمکت کنم؟', 'اوی سلام! 👋 چی شد؟ لازم داری کمک کنم؟', 'هی! سلام 🔥 بگو ببینم'] },
+  { keywords: ['قیمت','چقدر','چند','هزینه'], replies: ['قیمت‌ها تو صفحه فروشگاه هستن 🛒 ولی اگه محصول خاصی میخوای بگو بهت بگم', 'یه لحظه صبر کن بررسی کنم... قیمت‌ها متفاوته بسته به خدمت 😅 کدوم خدمتو میخوای؟'] },
+  { keywords: ['cp','وارزون','کالاف'], replies: ['آره داریم شارژ CP وارزون! 🔫 برو تو فروشگاه ببین... معمولاً سریع تحویل داده میشه', 'CP وارزون داریم 🎮 قیمت‌ها خوبن داداش، برو یه نگاه بنداز!'] },
+  { keywords: ['تلگرام','ممبر','عضو','بازدید'], replies: ['بله! خدمات تلگرام داریم 📱 ممبر واقعی، بازدید پست و... برو دسته تلگرام ببین', 'آره داریم 😊 ممبر واقعی اضافه میکنیم نه فیک. تو فروشگاه ببین!'] },
+  { keywords: ['پرداخت','خرید','چطور','روش'], replies: ['پرداخت آنلاینه، خیلی ساده ✅ روی دکمه خرید بزن اطلاعاتو پر کن کارت تموم میشه', 'ساده‌ست داداش 😎 انتخاب کن، روی خرید بزن، اطلاعات بده، همین!'] },
+  { keywords: ['تخفیف','کد','آفر'], replies: ['کد تخفیف LVUP15 داریم الان 🎉 ۱۵٪ روی همه چیز! (تا آخر هفته ها)', 'آره یه کد داریم LVUP15 بزن ۱۵٪ میخوره 🔥'] },
+  { keywords: ['امنیت','اطمینان','مطمئن','تضمین'], replies: ['صد در صد مطمئنی 💯 ما چندین ساله داریم کار میکنیم. مشتری‌های زیادی داریم که راضین', 'اطمینان داشته باش 😊 اگه مشکلی بود پول برمیگرده. گارانتی داریم!'] },
+  { keywords: ['وقت','زمان','چه وقت','کی'], replies: ['معمولاً بین ۱ تا ۲۴ ساعت تحویل داده میشه ⏱️ بستگی به نوع خدمت داره', 'خدمات دیجیتال سریعن 🚀 ولی بعضیا تا ۲۴ ساعت طول میکشه. صبر داشته باش!'] },
+  { keywords: ['مشکل','خراب','کار نمیکنه','مشکل'], replies: ['اوه اوه 😅 چه مشکلی؟ بگو ببینم چی شده سریع درست کنیم', 'یه لحظه... مشکل چیه دقیقاً؟ بگو حلش کنیم 🔧'] },
+  { keywords: ['ممنون','مرسی','تشکر'], replies: ['خواهش میکنم! 😊 هر وقت لازم داشتی اینجام', 'اختیار داری داداش 🤝 موفق باشی!', 'نوش جونت 🙏 هر سوالی داشتی بپرس!'] },
+];
+
+const fallbackReplies = [
+  'خب... راستش مطمئن نیستم دقیقاً 😅 ولی میتونی با ادمین تلگرام تماس بگیری!',
+  'این سوالتو بپرس از @lvupsupport در تلگرام 🙈 اونا بهتر میتونن جواب بدن',
+  'آخ یادم رفت 😂 ولی تو فروشگاه ببین شاید پیدا کنی. اگه نشد بگو',
+  'هممم... نمیدونم دقیقاً 🤔 صبر کن از بقیه بپرسم بهت خبر بدم',
+  'این یکیو باید بررسی کنم 👀 یه لحظه...',
+];
+
+function addBotMsg(text) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.innerHTML = text.replace(/\n/g, '<br>') + `<div class="msg-time">${getTime()}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addUserMsg(text) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = text + `<div class="msg-time" style="color:rgba(255,255,255,0.7)">${getTime()}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function getBotReply(msg) {
+  const lower = msg.toLowerCase();
+  for (const r of botResponses) {
+    if (r.keywords.some(k => lower.includes(k))) {
+      return r.replies[Math.floor(Math.random() * r.replies.length)];
+    }
+  }
+  return fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+}
+
+function sendChatMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addUserMsg(text);
+  input.value = '';
+
+  if (isAdminLoggedIn) {
+    newChatCount++;
+    document.getElementById('adminNotif').style.display = 'flex';
+  }
+
+  const typing = document.getElementById('typingIndicator');
+  typing.classList.add('show');
+  const delay = 800 + Math.random() * 1500;
+  setTimeout(() => {
+    typing.classList.remove('show');
+    addBotMsg(getBotReply(text));
+  }, delay);
+}
+
+function toggleChat() {
+  const box = document.getElementById('chatBox');
+  chatOpen = !chatOpen;
+  box.classList.toggle('open', chatOpen);
+}
+
+// ========== MODAL ==========
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+// ========== TOAST ==========
+function showToast(msg, icon = '✅', duration = 3000) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// ========== UTILS ==========
+function togglePassVis(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁️'; }
+}
+
+// Category filter buttons rendering
+function renderCategoryFilterBtns() {
+  const cats = getCategories();
+  const el = document.getElementById('categoryFilters');
+  if (!el) return;
+  el.innerHTML = cats.slice(0, 5).map(c => `
+    <button class="filter-btn" onclick="filterByCat('${c.name}',this)" style="font-size:0.8rem;padding:0.3rem 0.8rem">${c.icon} ${c.name}</button>`).join('');
+}
+
+function filterByCat(name, btn) {
+  const products = getProducts().filter(p => p.subCat === name);
+  const grid = document.getElementById('productsGrid');
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  grid.innerHTML = products.length > 0
+    ? products.map(p => productCardHTML(p)).join('')
+    : `<div class="empty-state" style="grid-column:1/-1"><div class="emoji">📂</div><h3>در این دسته‌بندی محصولی نیست</h3></div>`;
+}
+
+// keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+    if (chatOpen) toggleChat();
+  }
+});
+
+// add pCategory listener after DOM
+const pCatEl = document.getElementById('pCategory');
+if (pCatEl) pCatEl.addEventListener('change', updateSubCategories);
+</script>
+</body>
+</html>
